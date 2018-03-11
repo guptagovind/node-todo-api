@@ -10,7 +10,9 @@ const {Todo} = require('./../models/todo');
     text: 'First test todo'
   }, {
     _id:new ObjectID(),
-    text: 'Second test todo'
+    text: 'Second test todo',
+    completed: true,
+    completedAt:333
   }];
 
 
@@ -44,7 +46,6 @@ describe('POST /todos', () => {
   });
 
   it('should not create todo with invalid data', (done) =>{
-    //const invalidText = undefined;
     request(app)
       .post('/todos')
       .send({})
@@ -141,6 +142,45 @@ describe('DELETE todos/:id', () =>{
       .end(done)
   });
 
+
+});
+
+describe('PATCH /todos/:id', () =>{
+  it('should update the todo', (done) =>{
+    const id = todos[0]._id.toHexString();
+    const update = {
+      text : 'First test todo updated',
+      completed: true
+    };
+    request(app)
+      .patch(`/todos/${id}`)
+      .send(update)
+      .expect(200)
+      .expect((res) =>{
+        expect(res.body.todo.text).toBe(update.text);
+        expect(res.body.todo.completed).toBe(update.completed);
+        expect(res.body.todo.completedAt).toBeA('number');
+      })
+      .end(done)
+  });
+
+  it('should clear completed at when todo is not completed', (done) => {
+    const id = todos[1]._id.toHexString();
+    const update = {
+      text : 'Second test todo updated',
+      completed: false
+    };
+    request(app)
+      .patch(`/todos/${id}`)
+      .send(update)
+      .expect(200)
+      .expect((res) =>{
+        expect(res.body.todo.text).toBe(update.text);
+        expect(res.body.todo.completed).toBe(update.completed);
+        expect(res.body.todo.completedAt).toNotExist();
+      })
+      .end(done)
+  });
 
 });
 
